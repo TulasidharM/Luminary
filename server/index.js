@@ -23,14 +23,22 @@ if (!fs.existsSync(dbPath)) {
   }
 }
 
-app.use((req, res, next) => {
+
+app.use(async (req, res, next) => {
   req.dbPath = dbPath;
+  try{
+    req.db = await getDb();
+    next();
+  } catch (err) {
+    res.status(500).json({message:'Database connection failed'});
+  }
   next();
 });
 
 const authRoutes = require('./routes/auth');
 const entriesRoutes = require('./routes/entries');
 const mongoRoutes = require('./routes/mongosetup');
+const { getDb } = require('./helper/mongo');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/entries', entriesRoutes);
