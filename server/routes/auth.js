@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient } = require("mongodb");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
-const { getDb } = require('../helper/mongo');
-
 
 const JWT_SECRET = process.env.JWT_SECRET || 'luminary_secret_dev';
+
+let db = express().locals.db();
 
 router.post('/register', async (req, res) => {
   try {

@@ -4,6 +4,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const corsMiddleware = require('cors');
+const { connectToDatabase } = require('./helper/mongo');
 
 const app = express();
 const PORT = 3001;
@@ -11,7 +12,7 @@ const PORT = 3001;
 app.use(corsMiddleware());
 app.use(express.json());
 
-// Initialize DB
+// Initialize Local DB
 const dbPath = path.join(__dirname, 'db.json');
 if (!fs.existsSync(dbPath)) {
   fs.writeFileSync(dbPath, JSON.stringify({ users: [], entries: [], summaries: [] }, null, 2));
@@ -23,27 +24,25 @@ if (!fs.existsSync(dbPath)) {
   }
 }
 
+// Connect to MongoDB and start the server
+connectToDatabase()
+  .then((dbInstance) => {
+    app.locals.db = dbInstance;
+    
+    // Routes
+    const authRoutes = require('./routes/auth');
+    const entriesRoutes = require('./routes/entries');
+    const mongoRoutes = require('./routes/mongosetup');
 
-app.use(async (req, res, next) => {
-  req.dbPath = dbPath;
-  try{
-    req.db = await getDb();
-    next();
-  } catch (err) {
-    res.status(500).json({message:'Database connection failed'});
-  }
-  next();
-});
+    app.use('/api/auth', authRoutes);
+    app.use('/api/entries', entriesRoutes);
+    app.use('/api/mongo', mongoRoutes);
 
-const authRoutes = require('./routes/auth');
-const entriesRoutes = require('./routes/entries');
-const mongoRoutes = require('./routes/mongosetup');
-const { getDb } = require('./helper/mongo');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/entries', entriesRoutes);
-app.use('/api/mongo', mongoRoutes);
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Critical: Could not connect to database on startup.", err);
+    process.exit(1);
+  });
