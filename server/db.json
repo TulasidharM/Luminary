@@ -1,0 +1,96 @@
+{
+  "users": [
+    {
+      "id": "test-user-id",
+      "username": "testuser",
+      "passwordHash": "$2b$10$W8YtlgDYe0OhT/gAqPgn6eh8.b2C8WTFTR3uV34Zm8K6KAPG7FI9."
+    },
+    {
+      "id": "42939790-8b49-4744-be31-380121886513",
+      "username": "tulasidhar",
+      "passwordHash": "$2b$10$edXR0IIHfj07uHbrVWbSdek5SsQYR5xEkGCNAcxMNIc2vObtC.UYC"
+    }
+  ],
+  "entries": [
+    {
+      "id": "1",
+      "userId": "test-user-id",
+      "title": "A Productive Morning",
+      "content": "Woke up early and finished my coding project. It feels great to see everything coming together. The dark mode in Luminary looks stunning!",
+      "mood": 5,
+      "moodEmoji": "😄",
+      "createdAt": "2026-04-09T08:30:00.000Z",
+      "updatedAt": "2026-04-09T08:30:00.000Z"
+    },
+    {
+      "id": "2",
+      "userId": "test-user-id",
+      "title": "Evening Walk",
+      "content": "Took a long walk through the park as the sun was setting. The colors were incredible. Definitely helped clear my head after a busy day.",
+      "mood": 4,
+      "moodEmoji": "🙂",
+      "createdAt": "2026-04-09T19:15:00.000Z",
+      "updatedAt": "2026-04-09T19:15:00.000Z"
+    },
+    {
+      "id": "3",
+      "userId": "test-user-id",
+      "title": "Feeling a bit drained",
+      "content": "Today was one of those days where everything seemed to take twice as long. I'm exhausted and just want to sleep. Hopefully tomorrow is better.",
+      "mood": 2,
+      "moodEmoji": "😕",
+      "createdAt": "2026-04-08T22:00:00.000Z",
+      "updatedAt": "2026-04-08T22:00:00.000Z"
+    },
+    {
+      "id": "4",
+      "userId": "test-user-id",
+      "title": "Thinking about the future",
+      "content": "Spent some time today journaling about where I want to be in five years. It's a bit overwhelming but also exciting to plan out my goals.",
+      "mood": 3,
+      "moodEmoji": "😐",
+      "createdAt": "2026-04-05T14:45:00.000Z",
+      "updatedAt": "2026-04-05T14:45:00.000Z"
+    },
+    {
+      "id": "fa62ea4a-3651-42e2-b76e-f0918888b1a3",
+      "userId": "1ce307f4-584a-456e-915e-8b1867fd0087",
+      "title": "First entry",
+      "content": "First entry\n",
+      "mood": 5,
+      "moodEmoji": "😄",
+      "createdAt": "2026-04-09T13:33:53.218Z",
+      "updatedAt": "2026-04-09T13:33:53.218Z"
+    },
+    {
+      "id": "cd183184-a988-4a51-b98a-56a585df9ff1",
+      "userId": "42939790-8b49-4744-be31-380121886513",
+      "title": "Dont even know",
+      "content": "idk what happened",
+      "mood": 3,
+      "moodEmoji": "😐",
+      "createdAt": "2026-04-10T05:44:52.266Z",
+      "updatedAt": "2026-04-10T05:44:52.266Z"
+    }
+  ],
+  "summaries": [
+    {
+      "userId": "test-user-id",
+      "date": "2026-04-09",
+      "summary": "Finishing a major coding project and taking a serene sunset walk resulted in a balanced day of productivity and mental clarity.",
+      "avgEmoji": "😄"
+    },
+    {
+      "userId": "test-user-id",
+      "date": "2026-04-08",
+      "summary": "The day was marked by a draining sense of sluggishness and exhaustion, resulting in a weary longing for rest and a better tomorrow.",
+      "avgEmoji": "😕"
+    },
+    {
+      "userId": "test-user-id",
+      "date": "2026-04-05",
+      "summary": "The day was spent mapping out long-term goals through journaling, a process that proved both overwhelming and exhilarating.",
+      "avgEmoji": "😐"
+    }
+  ]
+}
