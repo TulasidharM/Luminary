@@ -3,10 +3,64 @@ const router = express.Router();
 const { ObjectId } = require('mongodb');
 const fs = require('fs');
 const auth = require('../middleware/auth');
-const { generateDailySummary, calculateAvgMoodEmoji } = require('../services/summaryService');
+const { generateDailySummary } = require('../services/summaryService');
 
 
 router.use(auth);
+
+// Generate manual summary for a specific date (usually today)
+router.post('/summary', async (req, res) => {
+  try {
+    const { date } = req.body;
+    const db = req.app.locals.db;
+    const userId = req.user.userId;
+
+    if (!date) return res.status(400).json({ message: 'Date is required' });
+
+    // Fetch entries for that date
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const dayEntries = await db.collection('entries')
+      .find({ 
+        userId,
+        createdAt: {
+          $gte: startOfDay.toISOString(),
+          $lte: endOfDay.toISOString()
+        }
+      })
+      .toArray();
+
+    if (dayEntries.length === 0) {
+      return res.status(400).json({ message: 'No entries found for this date' });
+    }
+
+    const summaryText = await generateDailySummary(dayEntries);
+    
+    if (summaryText) {
+      const summaryData = {
+        userId,
+        date,
+        summary: summaryText
+      };
+
+      await db.collection('summaries').updateOne(
+        { userId, date },
+        { $set: summaryData },
+        { upsert: true }
+      );
+
+      res.json(summaryData);
+    } else {
+      res.status(500).json({ message: 'Failed to generate summary' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // Get specific entry
 router.get('/:id', async (req, res) => {
@@ -44,38 +98,6 @@ router.get('/', async (req, res) => {
     const userSummaries = await db.collection('summaries')
       .find({ userId: userId })
       .toArray();
-
-    // Grouping entries by date string (YYYY-MM-DD)
-    const grouped = {};
-    userEntries.forEach(e => {
-      const d = new Date(e.createdAt).toISOString().split('T')[0];
-      if (!grouped[d]) grouped[d] = [];
-      grouped[d].push(e);
-    });
-
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    // Process summaries for completed days
-    for (const [date, entries] of Object.entries(grouped)) {
-      if (date === todayStr) continue; // Skip today
-
-      const existingSummary = userSummaries.find(s => s.date === date);
-      if (!existingSummary) {
-        console.log("Getting summaries");
-        const summaryText = await generateDailySummary(entries);
-        
-        if (summaryText) {
-          const newSummary = {
-            userId: userId,
-            date,
-            summary: summaryText,
-            avgEmoji: calculateAvgMoodEmoji(entries)
-          };
-          await db.collection('summaries').insertOne(newSummary);
-          userSummaries.push(newSummary);
-        }
-      }
-    }
 
     res.json({
       entries: userEntries,

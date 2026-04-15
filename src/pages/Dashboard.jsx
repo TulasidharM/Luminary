@@ -6,10 +6,14 @@ import Navbar from '../components/Navbar';
 import StatsPanel from '../components/StatsPanel';
 import DiaryCard from '../components/DiaryCard';
 
+const MOOD_EMOJIS = {1: '😢', 2: '😕', 3: '😐', 4: '🙂', 5: '😄'};
+
 export default function Dashboard() {
+  
   const [entries, setEntries] = useState([]);
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
   const navigate = useNavigate();
 
   const fetchEntries = useCallback(async () => {
@@ -56,14 +60,32 @@ export default function Dashboard() {
           id: isoDate,
           label: displayLabel, 
           items: [], 
-          summary: summary?.summary,
-          avgEmoji: summary?.avgEmoji 
+          summary: summary?.summary
         };
       }
       groups[isoDate].items.push(entry);
     });
-    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(g => g[1]);
+
+    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(g => {
+      const group = g[1];
+      const avgMood = Math.round(group.items.reduce((acc, curr) => acc + curr.mood, 0) / group.items.length);
+      group.avgEmoji = MOOD_EMOJIS[avgMood] || MOOD_EMOJIS[3];
+      return group;
+    });
   }, [entries, summaries]);
+
+  const handleGenerateSummary = async (date) => {
+    if (generatingSummary) return;
+    setGeneratingSummary(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/entries/summary`, { date });
+      await fetchEntries();
+    } catch (err) {
+      console.error('Failed to generate summary', err);
+    } finally {
+      setGeneratingSummary(false);
+    }
+  };
 
   const handleDeleteEntry = async (id) => {
     if (!window.confirm('Are you sure you want to delete this entry?')) return;
@@ -129,13 +151,31 @@ export default function Dashboard() {
                     <Calendar className="w-4 h-4 text-indigo-500" />
                     <h2 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">{group.label}</h2>
                   </div>
-                  {group.summary && (
+                  {group.summary ? (
                     <div className="flex items-center gap-3 px-5 py-2 bg-indigo-50/50 dark:bg-blue-900/20 rounded-2xl border border-indigo-100/50 dark:border-blue-500/20">
                       <span className="text-2xl shrink-0" role="img" aria-label="Average Mood">{group.avgEmoji}</span>
                       <p className="text-sm text-indigo-700 dark:text-blue-300 italic flex items-center gap-2">
                         <Sparkles className="w-3 h-3 shrink-0" />
                         {group.summary}
                       </p>
+                    </div>
+                  ) : group.label === "Today" && (
+                    <button
+                      onClick={() => handleGenerateSummary(group.id)}
+                      disabled={generatingSummary}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all text-sm font-bold disabled:opacity-50"
+                    >
+                      {generatingSummary ? (
+                        <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <Sparkles className="w-4 h-4" />
+                      )}
+                      Generate Today's Summary
+                    </button>
+                  )}
+                  {(!group.summary && group.label !== "Today") && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                      <span className="text-xl shrink-0" role="img" aria-label="Average Mood">{group.avgEmoji}</span>
                     </div>
                   )}
                   <div className="hidden md:block h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>

@@ -17,6 +17,10 @@ connectToDatabase()
   .then((dbInstance) => {
     app.locals.db = dbInstance;
     
+    // Initialize Cron Jobs
+    const setupCron = require('./cron');
+    setupCron(dbInstance);
+
     // Routes
     const authRoutes = require('./routes/auth');
     const entriesRoutes = require('./routes/entries');

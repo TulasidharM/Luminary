@@ -6,10 +6,18 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
+  const [token, setToken] = useState(()=>{
+    const token = localStorage.getItem('token'); 
+    if(token){
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      return token;
+    }
+    return null;
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("token state have been updated now setting default axios header");
     if (token) {
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -40,7 +48,6 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (newToken) => {
-    console.log("got new token : " + newToken);
     setToken(newToken);
   };
 

@@ -45,7 +45,51 @@ function calculateAvgMoodEmoji(entries) {
   return MOOD_EMOJIS[rounded] || MOOD_EMOJIS[3];
 }
 
+/**
+ * Summarizes multiple days of entries using Gemini in a single request.
+ * entriesByDate: { "YYYY-MM-DD": [entries], ... }
+ * Returns: { "YYYY-MM-DD": "Summary text", ... }
+ */
+async function generateBatchSummaries(entriesByDate) {
+  const dates = Object.keys(entriesByDate);
+  if (!API_KEY || dates.length === 0) return {};
+
+  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+  
+  let contentToSummarize = "";
+  dates.forEach(date => {
+    const entries = entriesByDate[date];
+    const combined = entries.map(e => `- ${e.title}: ${e.content}`).join('\n');
+    contentToSummarize += `Date: ${date}\nEntries:\n${combined}\n\n`;
+  });
+
+  const prompt = `Below are diary entries grouped by date. 
+  For each date, provide exactly one concise, meaningful sentence summarizing the events and mood.
+  Format your response strictly as a JSON object where keys are the dates and values are the summaries.
+  Do not include any headers, markdown code blocks, or meta-talk.
+  
+  Example format:
+  {"2024-04-10": "A productive day at work followed by a relaxing evening.", "2024-04-11": "Felt a bit overwhelmed but managed to find peace through meditation."}
+
+  Data:
+  ${contentToSummarize}`;
+
+  try {
+    console.log("sending batch request to gemini for dates:", dates);
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text().trim();
+    
+    // Clean up potential markdown code blocks if Gemini includes them
+    const jsonString = responseText.replace(/```json|```/g, '').trim();
+    return JSON.parse(jsonString);
+  } catch (err) {
+    console.error('Gemini Batch API Error:', err);
+    return {};
+  }
+}
+
 module.exports = {
   generateDailySummary,
+  generateBatchSummaries,
   calculateAvgMoodEmoji
 };
