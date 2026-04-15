@@ -2,13 +2,12 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const fs = require('fs');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'luminary_secret_dev';
 
-let db = express().locals.db();
-
 router.post('/register', async (req, res) => {
+  let db = req.app.locals.db;
+   
   try {
     const { username, password } = req.body;
     
@@ -17,7 +16,7 @@ router.post('/register', async (req, res) => {
     }
     
     let users = await db.collection("users");
-    result = await users.findOne({ username: username });
+    let result = await users.findOne({ username: username });
 
     if(result){
       res.status(400).json({ message:"Username already exists!" });
@@ -32,9 +31,9 @@ router.post('/register', async (req, res) => {
       passwordHash
     };
 
-    await users.insertOne(newUser);
+    const insertedUser = await users.insertOne(newUser);
 
-    const token = jwt.sign({ userId: newUser.id, username: newUser.username }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: insertedUser.insertedId, username: newUser.username }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token });
   } catch (err) {
     console.log(err);
@@ -43,19 +42,20 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
+  let db = req.app.locals.db;
   try {
     const { username, password } = req.body;
-    // const db = readDB(req.dbPath);
-    
-    const user = db.users.find(u => u.username === username);
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    let users = db.collection("users"); 
+    const user = await users.findOne({username : username});
+    if (!user || Object.keys(user).length === 0) return res.status(400).json({ message: 'Invalid credentials' });
 
     const validPassword = await bcrypt.compare(password, user.passwordHash);
     if (!validPassword) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ message: 'Server error' });
   }
 });

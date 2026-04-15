@@ -12,18 +12,6 @@ const PORT = 3001;
 app.use(corsMiddleware());
 app.use(express.json());
 
-// Initialize Local DB
-const dbPath = path.join(__dirname, 'db.json');
-if (!fs.existsSync(dbPath)) {
-  fs.writeFileSync(dbPath, JSON.stringify({ users: [], entries: [], summaries: [] }, null, 2));
-} else {
-  const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-  if (!db.summaries) {
-    db.summaries = [];
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-  }
-}
-
 // Connect to MongoDB and start the server
 connectToDatabase()
   .then((dbInstance) => {

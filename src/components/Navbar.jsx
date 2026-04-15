@@ -9,7 +9,7 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center justify-between py-4 px-6 bg-white dark:bg-slate-800 shadow-sm transition-colors duration-200">
-      <Link to="/dashboard" className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+      <Link to="/dashboard" className="text-xl font-bold text-indigo-600 dark:text-blue-400">
         Luminary ✨
       </Link>
       <div className="flex items-center gap-4">

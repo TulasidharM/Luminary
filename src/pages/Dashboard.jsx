@@ -14,7 +14,7 @@ export default function Dashboard() {
 
   const fetchEntries = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:3001/api/entries');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/entries`);
       // res.data is now { entries: [], summaries: [] }
       setEntries(res.data.entries || []);
       console.log("got entries : " + JSON.stringify(res.data.entries));
@@ -53,6 +53,7 @@ export default function Dashboard() {
       if (!groups[isoDate]) {
         const summary = summaries.find(s => s.date === isoDate);
         groups[isoDate] = { 
+          id: isoDate,
           label: displayLabel, 
           items: [], 
           summary: summary?.summary,
@@ -67,7 +68,7 @@ export default function Dashboard() {
   const handleDeleteEntry = async (id) => {
     if (!window.confirm('Are you sure you want to delete this entry?')) return;
     try {
-      await axios.delete(`http://localhost:3001/api/entries/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/entries/${id}`);
       fetchEntries();
     } catch (err) {
       console.error('Failed to delete entry', err);
@@ -79,11 +80,11 @@ export default function Dashboard() {
   };
 
   const openEditEntry = (entry) => {
-    navigate(`/entry/${entry.id}`);
+    navigate(`/entry/${entry._id || entry.id}`);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-black transition-colors duration-200">
       <Navbar />
       
       <main className="max-w-6xl mx-auto px-4 py-8 pb-20">
@@ -114,7 +115,7 @@ export default function Dashboard() {
             <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">Start capturing your thoughts, moods, and moments.</p>
             <button
               onClick={openNewEntry}
-              className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-8 py-3 rounded-2xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all"
+              className="bg-indigo-50 dark:bg-blue-900/30 text-indigo-600 dark:text-blue-400 px-8 py-3 rounded-2xl font-bold hover:bg-indigo-100 dark:hover:bg-blue-900/50 transition-all"
             >
               Begin Your Story
             </button>
@@ -122,16 +123,16 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-16">
             {groupedEntries.map(group => (
-              <div key={group.label} className="space-y-6">
+              <div key={group.id} className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                   <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-700 shrink-0">
                     <Calendar className="w-4 h-4 text-indigo-500" />
                     <h2 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">{group.label}</h2>
                   </div>
                   {group.summary && (
-                    <div className="flex items-center gap-3 px-5 py-2 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20">
+                    <div className="flex items-center gap-3 px-5 py-2 bg-indigo-50/50 dark:bg-blue-900/20 rounded-2xl border border-indigo-100/50 dark:border-blue-500/20">
                       <span className="text-2xl shrink-0" role="img" aria-label="Average Mood">{group.avgEmoji}</span>
-                      <p className="text-sm text-indigo-700 dark:text-indigo-300 italic flex items-center gap-2">
+                      <p className="text-sm text-indigo-700 dark:text-blue-300 italic flex items-center gap-2">
                         <Sparkles className="w-3 h-3 shrink-0" />
                         {group.summary}
                       </p>
@@ -142,7 +143,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {group.items.map(entry => (
                     <DiaryCard 
-                      key={entry.id} 
+                      key={entry._id || entry.id} 
                       entry={entry} 
                       onEdit={openEditEntry}
                       onDelete={handleDeleteEntry}

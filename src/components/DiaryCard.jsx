@@ -4,6 +4,10 @@ const MOOD_LABELS = {
   1: 'Awful', 2: 'Bad', 3: 'Okay', 4: 'Good', 5: 'Great'
 };
 
+const MOOD_EMOJIS = {
+  1: '😢', 2: '😕', 3: '😐', 4: '🙂', 5: '😄'
+};
+
 export default function DiaryCard({ entry, onEdit, onDelete }) {
   const date = new Date(entry.createdAt).toLocaleDateString('en-US', {
     month: 'short',
@@ -16,12 +20,12 @@ export default function DiaryCard({ entry, onEdit, onDelete }) {
       <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
         <button 
           onClick={() => onEdit(entry)}
-          className="p-2 text-slate-400 hover:text-indigo-600 bg-white/80 dark:bg-slate-800/80 rounded-full shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+          className="p-2 text-slate-400 hover:text-indigo-600 bg-white/80 dark:bg-slate-800/80 rounded-full shadow-sm hover:bg-indigo-50 dark:hover:bg-blue-900/30 transition-colors"
         >
           <Edit2 className="w-4 h-4" />
         </button>
         <button 
-          onClick={() => onDelete(entry.id)}
+          onClick={() => onDelete(entry._id || entry.id)}
           className="p-2 text-slate-400 hover:text-red-600 bg-white/80 dark:bg-slate-800/80 rounded-full shadow-sm hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
         >
           <Trash2 className="w-4 h-4" />
@@ -29,8 +33,8 @@ export default function DiaryCard({ entry, onEdit, onDelete }) {
       </div>
 
       <div className="flex items-center gap-3 mb-4">
-        <span className="text-4xl bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl">
-          {entry.moodEmoji}
+        <span className="text-4xl bg-slate-50 dark:bg-black/50 p-2 rounded-xl">
+          {entry.moodEmoji || MOOD_EMOJIS[entry.mood]}
         </span>
         <div>
           <span className="text-sm font-medium text-slate-500 dark:text-slate-400 block">{MOOD_LABELS[entry.mood]}</span>

@@ -40,6 +40,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (newToken) => {
+    console.log("got new token : " + newToken);
     setToken(newToken);
   };
 

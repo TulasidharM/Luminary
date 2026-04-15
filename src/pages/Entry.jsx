@@ -22,7 +22,7 @@ export default function Entry() {
     if (id) {
       const fetchEntry = async () => {
         try {
-          const res = await axios.get(`http://localhost:3001/api/entries/${id}`);
+          const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/entries/${id}`);
           setTitle(res.data.title);
           setContent(res.data.content);
           setMood(res.data.mood);
@@ -51,9 +51,9 @@ export default function Entry() {
 
     try {
       if (id) {
-        await axios.put(`http://localhost:3001/api/entries/${id}`, entryData);
+        await axios.put(`${import.meta.env.VITE_API_URL}/api/entries/${id}`, entryData);
       } else {
-        await axios.post('http://localhost:3001/api/entries', entryData);
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/entries`, entryData);
       }
       navigate('/dashboard');
     } catch (err) {
@@ -66,7 +66,7 @@ export default function Entry() {
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this entry?')) return;
     try {
-      await axios.delete(`http://localhost:3001/api/entries/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/entries/${id}`);
       navigate('/dashboard');
     } catch (err) {
       console.error('Failed to delete entry', err);
@@ -75,7 +75,7 @@ export default function Entry() {
 
   if (fetching) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-slate-50 dark:bg-black">
         <Navbar />
         <div className="flex justify-center items-center h-[calc(100vh-72px)]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -85,14 +85,14 @@ export default function Entry() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-12 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-black pb-12 transition-colors duration-200">
       <Navbar />
       
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8 flex items-center justify-between">
           <Link 
             to="/dashboard" 
-            className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors font-medium"
+            className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors font-medium"
           >
             <ChevronLeft className="w-5 h-5" />
             Back to Dashboard
@@ -115,11 +115,11 @@ export default function Entry() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Title of your story..."
-              className="w-full text-4xl md:text-5xl font-bold bg-transparent border-none outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-white"
+              className="w-full text-2xl md:text-3xl font-bold bg-transparent border-none outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-white"
               required
               autoFocus
             />
-            <div className="h-1 w-20 bg-indigo-500 rounded-full"></div>
+            <div className="h-1 w-12 bg-indigo-500 rounded-full"></div>
           </div>
 
           <div className="pt-4">
@@ -130,7 +130,7 @@ export default function Entry() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Tell your story..."
-            className="w-full min-h-[400px] text-lg md:text-xl leading-relaxed bg-transparent border-none outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-slate-200"
+            className="w-full min-h-100 text-lg md:text-xl leading-relaxed bg-transparent border-none outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-slate-200"
             required
           ></textarea>
 

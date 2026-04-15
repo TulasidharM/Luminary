@@ -17,7 +17,7 @@ export default function Register() {
     setError('');
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:3001/api/auth/register', { username, password });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/register`, { username, password });
       login(res.data.token);
       navigate('/dashboard');
     } catch (err) {
@@ -28,7 +28,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-black">
       <Navbar />
       <div className="flex justify-center items-center h-[calc(100vh-72px)] px-4">
         <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-700">
@@ -42,7 +42,7 @@ export default function Register() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-black focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all outline-none"
                 placeholder="Choose a username"
               />
             </div>
@@ -53,7 +53,7 @@ export default function Register() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-black focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all outline-none"
                 placeholder="Choose a password"
               />
             </div>
@@ -67,7 +67,7 @@ export default function Register() {
           </form>
           <p className="text-center mt-6 text-slate-600 dark:text-slate-400">
             Already have an account?{' '}
-            <Link to="/login" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+            <Link to="/login" className="text-indigo-600 dark:text-blue-400 hover:underline font-medium">
               Login here
             </Link>
           </p>

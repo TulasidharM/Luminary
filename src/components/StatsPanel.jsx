@@ -43,14 +43,14 @@ export default function StatsPanel({ entries }) {
       </div>
       <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Avg Mood</p>
-        <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{stats.avgMood}</p>
+        <p className="text-3xl font-bold text-indigo-600 dark:text-blue-400">{stats.avgMood}</p>
       </div>
       <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 text-center flex flex-col justify-center">
         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-2">Mood Breakdown</p>
         <div className="flex justify-center gap-1">
           {[1,2,3,4,5].map(m => (
             <div key={m} className="flex flex-col items-center">
-              <div className="w-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-t-sm relative h-8">
+              <div className="w-2 bg-indigo-100 dark:bg-blue-900/30 rounded-t-sm relative h-8">
                 <div 
                   className="absolute bottom-0 w-full bg-indigo-500 rounded-t-sm" 
                   style={{ height: `${(stats.distribution[m] / stats.total) * 100}%` }}

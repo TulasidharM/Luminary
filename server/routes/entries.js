@@ -1,29 +1,31 @@
 const express = require('express');
 const router = express.Router();
+const { ObjectId } = require('mongodb');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
 const auth = require('../middleware/auth');
 const { generateDailySummary, calculateAvgMoodEmoji } = require('../services/summaryService');
 
-function readDB(dbPath) {
-  return JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-}
 
-function writeDB(dbPath, data) {
-  fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
-}
-
-//router.use(auth);
+router.use(auth);
 
 // Get specific entry
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
+  const db = req.app.locals.db;
   try {
     const { id } = req.params;
-    const db = readDB(req.dbPath);
-    const entry = db.entries.find(e => e.id === id && e.userId === req.user.userId);
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid entry ID' });
+    }
+    
+    const entry = await db.collection("entries").findOne({
+      _id: new ObjectId(id),
+      userId: req.user.userId
+    });
+    
     if (!entry) return res.status(404).json({ message: 'Entry not found' });
     res.json(entry);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -31,11 +33,18 @@ router.get('/:id', (req, res) => {
 // Get all entries for user
 router.get('/', async (req, res) => {
   try {
-    const db = readDB(req.dbPath);
-    const userEntries = db.entries
-      .filter(e => e.userId === req.user.userId)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const db = req.app.locals.db;
+    const userId = req.user.userId;
+
+    const userEntries = await db.collection('entries')
+      .find({ userId: userId })
+      .sort({ createdAt: -1 })
+      .toArray();
     
+    const userSummaries = await db.collection('summaries')
+      .find({ userId: userId })
+      .toArray();
+
     // Grouping entries by date string (YYYY-MM-DD)
     const grouped = {};
     userEntries.forEach(e => {
@@ -45,34 +54,32 @@ router.get('/', async (req, res) => {
     });
 
     const todayStr = new Date().toISOString().split('T')[0];
-    let dbUpdated = false;
 
     // Process summaries for completed days
     for (const [date, entries] of Object.entries(grouped)) {
       if (date === todayStr) continue; // Skip today
 
-      const existingSummary = db.summaries.find(s => s.userId === req.user.userId && s.date === date);
+      const existingSummary = userSummaries.find(s => s.date === date);
       if (!existingSummary) {
         console.log("Getting summaries");
         const summaryText = await generateDailySummary(entries);
         
         if (summaryText) {
-          db.summaries.push({
-            userId: req.user.userId,
+          const newSummary = {
+            userId: userId,
             date,
             summary: summaryText,
             avgEmoji: calculateAvgMoodEmoji(entries)
-          });
-          dbUpdated = true;
+          };
+          await db.collection('summaries').insertOne(newSummary);
+          userSummaries.push(newSummary);
         }
       }
     }
 
-    if (dbUpdated) writeDB(req.dbPath, db);
-
     res.json({
       entries: userEntries,
-      summaries: db.summaries.filter(s => s.userId === req.user.userId)
+      summaries: userSummaries
     });
   } catch (err) {
     console.error(err);
@@ -81,69 +88,85 @@ router.get('/', async (req, res) => {
 });
 
 // Create entry
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { title, content, mood, moodEmoji } = req.body;
-    const db = readDB(req.dbPath);
+    const { title, content, mood } = req.body;
+    const db = req.app.locals.db;
     
     const newEntry = {
-      id: uuidv4(),
       userId: req.user.userId,
       title,
       content,
       mood,
-      moodEmoji,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    db.entries.push(newEntry);
-    writeDB(req.dbPath, db);
-    res.status(201).json(newEntry);
+    const result = await db.collection("entries").insertOne(newEntry);
+    res.status(201).json({ ...newEntry, _id: result.insertedId });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Update entry
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, mood, moodEmoji } = req.body;
-    const db = readDB(req.dbPath);
+    const { title, content, mood } = req.body;
+    const db = req.app.locals.db;
     
-    const entryIndex = db.entries.findIndex(e => e.id === id && e.userId === req.user.userId);
-    if (entryIndex === -1) return res.status(404).json({ message: 'Entry not found' });
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid entry ID' });
+    }
 
-    db.entries[entryIndex] = {
-      ...db.entries[entryIndex],
-      title,
-      content,
-      mood,
-      moodEmoji,
-      updatedAt: new Date().toISOString()
-    };
+    const result = await db.collection("entries").findOneAndUpdate(
+      { 
+        _id: new ObjectId(id),
+        userId: req.user.userId
+      },
+      {
+        $set: {
+          title,
+          content,
+          mood,
+          updatedAt: new Date().toISOString()
+        }
+      },
+      { returnDocument: 'after' }
+    );
 
-    writeDB(req.dbPath, db);
-    res.json(db.entries[entryIndex]);
+    const updatedEntry = result.value || result;
+    if (!updatedEntry) return res.status(404).json({ message: 'Entry not found' });
+    
+    res.json(updatedEntry);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Delete entry
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const db = readDB(req.dbPath);
+    const db = req.app.locals.db;
     
-    const entryIndex = db.entries.findIndex(e => e.id === id && e.userId === req.user.userId);
-    if (entryIndex === -1) return res.status(404).json({ message: 'Entry not found' });
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid entry ID' });
+    }
 
-    db.entries.splice(entryIndex, 1);
-    writeDB(req.dbPath, db);
+    const result = await db.collection("entries").deleteOne({
+      _id: new ObjectId(id),
+      userId: req.user.userId
+    });
+    
+    if (result.deletedCount === 0) return res.status(404).json({ message: 'Entry not found' });
+
     res.status(204).send();
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
