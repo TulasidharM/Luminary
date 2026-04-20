@@ -18,6 +18,7 @@ export default function Entry() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!!id);
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+  const [visibleWordCount, setVisibleWordCount] = useState(2);
   const textareaRef = useRef(null);
   const mirrorRef = useRef(null);
 
@@ -32,14 +33,16 @@ export default function Entry() {
     
     // Split into parts, keeping the spaces/delimiters
     const parts = content.split(/(\s+)/);
-    let wordCount = 0;
-    let splitIndex = parts.length;
+    console.log("Split into part : " + parts);
 
-    // Work backwards to find the start of the last two words
+    let wordCount = 0;
+    let splitIndex = 0;
+
+    // Work backwards to find the start of the last X words
     for (let i = parts.length - 1; i >= 0; i--) {
       if (/\S/.test(parts[i])) {
         wordCount++;
-        if (wordCount === 2) {
+        if (wordCount === visibleWordCount) {
           splitIndex = i;
           break;
         }
@@ -52,10 +55,10 @@ export default function Entry() {
     return (
       <div 
         ref={mirrorRef}
-        className="absolute inset-0 pointer-events-none whitespace-pre-wrap break-words text-lg md:text-xl leading-relaxed text-slate-900 dark:text-white overflow-hidden"
+        className="absolute inset-0 pointer-events-none whitespace-pre-wrap wrap-break-word text-lg md:text-xl leading-relaxed text-slate-900 dark:text-white overflow-hidden"
         aria-hidden="true"
       >
-        <span className="blur-[8px] opacity-30 select-none">{blurred}</span>
+        <span className="blur-sm opacity-30 select-none">{blurred}</span>
         <span>{visible}</span>
       </div>
     );
@@ -167,21 +170,42 @@ export default function Entry() {
 
           <div className="pt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <MoodPicker selectedMood={mood} onSelect={setMood} />
-            <button
-              type="button"
-              onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-              className={`flex items-center self-start md:self-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all border ${
-                isPrivacyMode 
-                ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' 
-                : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700/50 dark:text-slate-400 dark:border-slate-600'
-              }`}
-            >
-              {isPrivacyMode ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-              {isPrivacyMode ? 'Privacy Mode: ON' : 'Privacy Mode: OFF'}
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              {isPrivacyMode && (
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 p-1 rounded-xl border border-slate-200 dark:border-slate-600 transition-all animate-in fade-in slide-in-from-right-4">
+                  <span className="text-xs font-bold text-slate-400 px-2 uppercase tracking-wider">Words visible:</span>
+                  {[1, 2, 3, 5].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setVisibleWordCount(count)}
+                      className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
+                        visibleWordCount === count
+                        ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      {count}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all border ${
+                  isPrivacyMode 
+                  ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' 
+                  : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700/50 dark:text-slate-400 dark:border-slate-600'
+                }`}
+              >
+                {isPrivacyMode ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                {isPrivacyMode ? 'Privacy Mode: ON' : 'Privacy Mode: OFF'}
+              </button>
+            </div>
           </div>
 
-          <div className="relative min-h-[400px]">
+          <div className="relative min-h-100">
             {isPrivacyMode && renderPrivacyContent()}
             <textarea
               ref={textareaRef}
@@ -189,7 +213,7 @@ export default function Entry() {
               onChange={(e) => setContent(e.target.value)}
               onScroll={handleScroll}
               placeholder="Tell your story..."
-              className={`w-full min-h-[400px] text-lg md:text-xl leading-relaxed bg-transparent border-none outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 transition-all duration-300 relative z-10 ${
+              className={`w-full min-h-100 text-lg md:text-xl leading-relaxed bg-transparent border-none outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 transition-all duration-300 relative z-10 ${
                 isPrivacyMode 
                 ? 'text-transparent caret-indigo-600 dark:caret-indigo-400' 
                 : 'text-slate-900 dark:text-slate-200'
