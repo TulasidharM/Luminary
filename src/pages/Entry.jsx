@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Save, Trash2 } from 'lucide-react';
+import { ChevronLeft, Save, Trash2, Lock, Unlock } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import MoodPicker from '../components/MoodPicker';
 
@@ -17,6 +17,49 @@ export default function Entry() {
   const [mood, setMood] = useState(3);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!!id);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+  const textareaRef = useRef(null);
+  const mirrorRef = useRef(null);
+
+  const handleScroll = (e) => {
+    if (mirrorRef.current) {
+      mirrorRef.current.scrollTop = e.target.scrollTop;
+    }
+  };
+
+  const renderPrivacyContent = () => {
+    if (!content) return null;
+    
+    // Split into parts, keeping the spaces/delimiters
+    const parts = content.split(/(\s+)/);
+    let wordCount = 0;
+    let splitIndex = parts.length;
+
+    // Work backwards to find the start of the last two words
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (/\S/.test(parts[i])) {
+        wordCount++;
+        if (wordCount === 2) {
+          splitIndex = i;
+          break;
+        }
+      }
+    }
+
+    const blurred = parts.slice(0, splitIndex).join('');
+    const visible = parts.slice(splitIndex).join('');
+
+    return (
+      <div 
+        ref={mirrorRef}
+        className="absolute inset-0 pointer-events-none whitespace-pre-wrap break-words text-lg md:text-xl leading-relaxed text-slate-900 dark:text-white overflow-hidden"
+        aria-hidden="true"
+      >
+        <span className="blur-[8px] opacity-30 select-none">{blurred}</span>
+        <span>{visible}</span>
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (id) {
@@ -122,17 +165,38 @@ export default function Entry() {
             <div className="h-1 w-12 bg-indigo-500 rounded-full"></div>
           </div>
 
-          <div className="pt-4">
+          <div className="pt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <MoodPicker selectedMood={mood} onSelect={setMood} />
+            <button
+              type="button"
+              onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+              className={`flex items-center self-start md:self-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all border ${
+                isPrivacyMode 
+                ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' 
+                : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700/50 dark:text-slate-400 dark:border-slate-600'
+              }`}
+            >
+              {isPrivacyMode ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+              {isPrivacyMode ? 'Privacy Mode: ON' : 'Privacy Mode: OFF'}
+            </button>
           </div>
 
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Tell your story..."
-            className="w-full min-h-100 text-lg md:text-xl leading-relaxed bg-transparent border-none outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-slate-200"
-            required
-          ></textarea>
+          <div className="relative min-h-[400px]">
+            {isPrivacyMode && renderPrivacyContent()}
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onScroll={handleScroll}
+              placeholder="Tell your story..."
+              className={`w-full min-h-[400px] text-lg md:text-xl leading-relaxed bg-transparent border-none outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 transition-all duration-300 relative z-10 ${
+                isPrivacyMode 
+                ? 'text-transparent caret-indigo-600 dark:caret-indigo-400' 
+                : 'text-slate-900 dark:text-slate-200'
+              }`}
+              required
+            ></textarea>
+          </div>
 
           <div className="flex justify-end pt-8 border-t border-slate-100 dark:border-slate-700">
             <button
