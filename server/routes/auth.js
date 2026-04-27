@@ -60,5 +60,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.get('/wakeup', async (req, res) => {
+  res.status(200).json({message: 'Im alive!'})
+});
 
 module.exports = router;
