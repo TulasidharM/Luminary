@@ -5,10 +5,6 @@ import { ChevronLeft, Save, Trash2, Lock, Unlock } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import MoodPicker from '../components/MoodPicker';
 
-const MOOD_EMOJIS = {
-  1: '😢', 2: '😕', 3: '😐', 4: '🙂', 5: '😄'
-};
-
 export default function Entry() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -91,8 +87,7 @@ export default function Entry() {
     const entryData = {
       title,
       content,
-      mood,
-      moodEmoji: MOOD_EMOJIS[mood]
+      mood
     };
 
     try {

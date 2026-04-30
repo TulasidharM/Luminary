@@ -21,18 +21,40 @@ export function AuthProvider({ children }) {
     if (token) {
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setUser({ id: payload.userId, username: payload.username });
-      } catch (e) {
-        logout();
-      }
+      fetchUserProfile();
     } else {
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
       setUser(null);
     }
   }, [token]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/me`);
+      setUser(response.data);
+    } catch (e) {
+      console.error("Failed to fetch user profile", e);
+      // Fallback to basic user info from token if API fails
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUser({ _id: payload.userId, username: payload.username, settings: { emojiSet: 0, disableEmojis: false } });
+      } catch (err) {
+        logout();
+      }
+    }
+  };
+
+  const updateSettings = async (newSettings) => {
+    try {
+      const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/users/settings`, newSettings);
+      setUser(response.data);
+      return response.data;
+    } catch (e) {
+      console.error("Failed to update settings", e);
+      throw e;
+    }
+  };
 
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
@@ -57,7 +79,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateSettings, fetchUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,14 +1,16 @@
 import { Edit2, Trash2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { getEmoji } from '../utils/emojis';
 
 const MOOD_LABELS = {
   1: 'Awful', 2: 'Bad', 3: 'Okay', 4: 'Good', 5: 'Great'
 };
 
-const MOOD_EMOJIS = {
-  1: '😢', 2: '😕', 3: '😐', 4: '🙂', 5: '😄'
-};
-
 export default function DiaryCard({ entry, onEdit, onDelete }) {
+  const { user } = useAuth();
+  const settings = user?.settings;
+  const emoji = getEmoji(entry.mood, settings);
+
   const date = new Date(entry.createdAt).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -33,9 +35,11 @@ export default function DiaryCard({ entry, onEdit, onDelete }) {
       </div>
 
       <div className="flex items-center gap-3 mb-4">
-        <span className="text-4xl bg-slate-50 dark:bg-black/50 p-2 rounded-xl">
-          {entry.moodEmoji || MOOD_EMOJIS[entry.mood]}
-        </span>
+        {emoji && (
+          <span className="text-4xl bg-slate-50 dark:bg-black/50 p-2 rounded-xl">
+            {emoji}
+          </span>
+        )}
         <div>
           <span className="text-sm font-medium text-slate-500 dark:text-slate-400 block">{MOOD_LABELS[entry.mood]}</span>
           <span className="text-xs text-slate-400 dark:text-slate-500">{date}</span>

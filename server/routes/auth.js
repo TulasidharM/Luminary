@@ -28,7 +28,11 @@ router.post('/register', async (req, res) => {
 
     const newUser = {
       username,
-      passwordHash
+      passwordHash,
+      settings: {
+        emojiSet: 0,
+        disableEmojis: false
+      }
     };
 
     const insertedUser = await users.insertOne(newUser);

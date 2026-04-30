@@ -5,11 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import StatsPanel from '../components/StatsPanel';
 import DiaryCard from '../components/DiaryCard';
-
-const MOOD_EMOJIS = {1: '😢', 2: '😕', 3: '😐', 4: '🙂', 5: '😄'};
+import { useAuth } from '../context/AuthContext';
+import { getEmoji } from '../utils/emojis';
 
 export default function Dashboard() {
-  
+  const { user } = useAuth();
+  const settings = user?.settings;
   const [entries, setEntries] = useState([]);
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,10 +70,10 @@ export default function Dashboard() {
     return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(g => {
       const group = g[1];
       const avgMood = Math.round(group.items.reduce((acc, curr) => acc + curr.mood, 0) / group.items.length);
-      group.avgEmoji = MOOD_EMOJIS[avgMood] || MOOD_EMOJIS[3];
+      group.avgEmoji = getEmoji(avgMood, settings);
       return group;
     });
-  }, [entries, summaries]);
+  }, [entries, summaries, settings]);
 
   const handleGenerateSummary = async (date) => {
     if (generatingSummary) return;
@@ -153,7 +154,7 @@ export default function Dashboard() {
                   </div>
                   {group.summary ? (
                     <div className="flex items-center gap-3 px-5 py-2 bg-indigo-50/50 dark:bg-blue-900/20 rounded-2xl border border-indigo-100/50 dark:border-blue-500/20">
-                      <span className="text-2xl shrink-0" role="img" aria-label="Average Mood">{group.avgEmoji}</span>
+                      {group.avgEmoji && <span className="text-2xl shrink-0" role="img" aria-label="Average Mood">{group.avgEmoji}</span>}
                       <p className="text-sm text-indigo-700 dark:text-blue-300 italic flex items-center gap-2">
                         <Sparkles className="w-3 h-3 shrink-0" />
                         {group.summary}
@@ -173,7 +174,7 @@ export default function Dashboard() {
                       Generate Today's Summary
                     </button>
                   )}
-                  {(!group.summary && group.label !== "Today") && (
+                  {(!group.summary && group.label !== "Today") && group.avgEmoji && (
                     <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
                       <span className="text-xl shrink-0" role="img" aria-label="Average Mood">{group.avgEmoji}</span>
                     </div>
