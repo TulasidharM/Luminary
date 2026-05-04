@@ -4,19 +4,24 @@ import axios from 'axios';
 import { ChevronLeft, Save, Trash2, Lock, Unlock } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import MoodPicker from '../components/MoodPicker';
+import { useAuth } from '../context/AuthContext';
 
 export default function Entry() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user }= useAuth();
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [mood, setMood] = useState(3);
+  const [mood, setMood] = useState(-1);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!!id);
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
   const [visibleWordCount, setVisibleWordCount] = useState(2);
   const textareaRef = useRef(null);
   const mirrorRef = useRef(null);
+
+  const possibleVisibleWordCounts = [1,3,5,7,10];
 
   const handleScroll = (e) => {
     if (mirrorRef.current) {
@@ -164,12 +169,12 @@ export default function Entry() {
           </div>
 
           <div className="pt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <MoodPicker selectedMood={mood} onSelect={setMood} />
+            {!user.settings?.disableEmojis && (<MoodPicker selectedMood={mood} onSelect={setMood} />)}
             <div className="flex flex-wrap items-center gap-3">
               {isPrivacyMode && (
                 <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 p-1 rounded-xl border border-slate-200 dark:border-slate-600 transition-all animate-in fade-in slide-in-from-right-4">
                   <span className="text-xs font-bold text-slate-400 px-2 uppercase tracking-wider">Words visible:</span>
-                  {[1, 2, 3, 5].map((count) => (
+                  {possibleVisibleWordCounts.map((count) => (
                     <button
                       key={count}
                       type="button"
@@ -206,7 +211,6 @@ export default function Entry() {
               ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              onScroll={handleScroll}
               placeholder="Tell your story..."
               className={`w-full min-h-100 text-lg md:text-xl leading-relaxed bg-transparent border-none outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 transition-all duration-300 relative z-10 ${
                 isPrivacyMode 

@@ -27,7 +27,7 @@ export default function SettingsOverlay({ isOpen, onClose }) {
       setTimeout(() => {
         setMessage('');
         onClose();
-      }, 1500);
+      }, 500);
     } catch (err) {
       setMessage('Failed to update settings. Please try again.');
     } finally {

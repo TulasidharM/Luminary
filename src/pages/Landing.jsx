@@ -10,7 +10,7 @@ export default function Landing() {
   if (token) return <Navigate to="/dashboard" replace />;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-100 dark:from-black dark:to-blue-950 transition-colors duration-500 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-linear-to-br from-indigo-50 to-violet-100 dark:from-black dark:to-blue-950 transition-colors duration-500 relative overflow-hidden">
       <div className="absolute top-6 right-6">
         <button
           onClick={toggleTheme}

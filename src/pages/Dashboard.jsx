@@ -69,8 +69,11 @@ export default function Dashboard() {
 
     return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(g => {
       const group = g[1];
-      const avgMood = Math.round(group.items.reduce((acc, curr) => acc + curr.mood, 0) / group.items.length);
-      group.avgEmoji = getEmoji(avgMood, settings);
+      const moodItems = group.items.filter(i => i.mood !== -1);
+      const avgMood = moodItems.length > 0 
+        ? Math.round(moodItems.reduce((acc, curr) => acc + curr.mood, 0) / moodItems.length)
+        : null;
+      group.avgEmoji = avgMood !== null ? getEmoji(avgMood, settings) : null;
       return group;
     });
   }, [entries, summaries, settings]);

@@ -41,7 +41,9 @@ export default function DiaryCard({ entry, onEdit, onDelete }) {
           </span>
         )}
         <div>
-          <span className="text-sm font-medium text-slate-500 dark:text-slate-400 block">{MOOD_LABELS[entry.mood]}</span>
+          {MOOD_LABELS[entry.mood] && (
+            <span className="text-sm font-medium text-slate-500 dark:text-slate-400 block">{MOOD_LABELS[entry.mood]}</span>
+          )}
           <span className="text-xs text-slate-400 dark:text-slate-500">{date}</span>
         </div>
       </div>
